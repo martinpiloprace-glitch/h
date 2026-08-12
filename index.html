@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>YouTube – Přehrávač</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: "Roboto", Arial, sans-serif; }
+    body { background-color: #0f0f0f; color: #f1f1f1; overflow-x: hidden; }
+
+    /* HORNÍ LIŠTA (YOUTUBE HEADER) */
+    .yt-header {
+      position: sticky; top: 0; z-index: 100;
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 0 16px; height: 56px; background-color: #0f0f0f;
+    }
+    .header-left { display: flex; align-items: center; gap: 16px; }
+    .menu-icon { font-size: 20px; cursor: pointer; color: #fff; background: none; border: none; }
+    .logo { display: flex; align-items: center; gap: 4px; font-weight: bold; font-size: 18px; color: #fff; text-decoration: none; }
+    .logo-badge { background: #ff0000; color: #fff; font-size: 10px; padding: 2px 4px; border-radius: 4px; font-weight: bold; }
+    
+    .header-center { display: flex; align-items: center; gap: 8px; flex-grow: 1; max-width: 600px; margin: 0 20px; }
+    .search-box { display: flex; width: 100%; border: 1px solid #303030; border-radius: 40px 0 0 40px; background: #121212; padding: 8px 16px; }
+    .search-box input { background: transparent; border: none; outline: none; color: #fff; width: 100%; font-size: 14px; }
+    .search-btn { background: #222; border: 1px solid #303030; border-left: none; border-radius: 0 40px 40px 0; padding: 8px 20px; color: #fff; cursor: pointer; }
+    .mic-btn { background: #222; border: none; border-radius: 50%; width: 40px; height: 40px; color: #fff; cursor: pointer; display: flex; justify-content: center; align-items: center; flex-shrink: 0; }
+
+    .header-right { display: flex; align-items: center; gap: 12px; }
+    .upload-btn { background: #272727; color: #fff; border: none; padding: 8px 14px; border-radius: 18px; font-size: 13px; font-weight: bold; cursor: pointer; display: flex; align-items: center; gap: 6px; }
+    .upload-btn:hover { background: #3f3f3f; }
+
+    /* HLAVNÍ DVOUSLOUPCOVÝ LAYOUT */
+    .yt-container {
+      display: flex; gap: 24px; max-width: 1750px; margin: 0 auto; padding: 24px;
+    }
+    .primary-content { flex: 1; min-width: 0; }
+    .secondary-content { width: 400px; flex-shrink: 0; }
+
+    /* VIDEO PŘEHRÁVAČ */
+    .player-wrapper {
+      position: relative; width: 100%; aspect-ratio: 16 / 9; background: #000; border-radius: 12px; overflow: hidden;
+    }
+    video { width: 100%; height: 100%; object-fit: contain; }
+
+    /* INFORMACE O VIDEU & KANÁL */
+    .video-title { font-size: 20px; font-weight: bold; margin: 12px 0 8px 0; line-height: 1.3; }
+    
+    .channel-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; flex-wrap: wrap; gap: 12px; }
+    .channel-info { display: flex; align-items: center; gap: 12px; }
+    .channel-avatar { width: 40px; height: 40px; border-radius: 50%; background: #3ea6ff; display: flex; justify-content: center; align-items: center; font-weight: bold; color: #000; }
+    .channel-name { font-size: 15px; font-weight: bold; color: #fff; }
+    .channel-subs { font-size: 12px; color: #aaa; }
+    .sub-btn { background: #f1f1f1; color: #0f0f0f; border: none; padding: 10px 16px; border-radius: 18px; font-weight: bold; font-size: 14px; cursor: pointer; margin-left: 12px; }
+    .sub-btn:hover { background: #d9d9d9; }
+
+    .actions-row { display: flex; gap: 8px; }
+    .action-btn { background: #272727; color: #fff; border: none; padding: 8px 16px; border-radius: 18px; font-size: 13px; font-weight: 500; cursor: pointer; display: flex; align-items: center; gap: 6px; }
+    .action-btn:hover { background: #3f3f3f; }
+
+    /* POPIS VIDEA */
+    .description-box { background: #272727; border-radius: 12px; padding: 12px; font-size: 14px; line-height: 1.4; margin-bottom: 24px; }
+    .description-stats { font-weight: bold; margin-bottom: 6px; font-size: 13px; }
+
+    /* SEKCE KOMENTÁŘŮ */
+    .comments-header { font-size: 18px; font-weight: bold; margin-bottom: 16px; }
+    .comment-input-box { display: flex; gap: 12px; margin-bottom: 24px; }
+    .user-avatar { width: 40px; height: 40px; border-radius: 50%; background: #555; flex-shrink: 0; }
+    .comment-input-box input { flex-grow: 1; background: transparent; border: none; border-bottom: 1px solid #3f3f3f; color: #fff; outline: none; padding-bottom: 4px; }
+
+    /* PRAVÝ PANEL (PLAYLIST A NÁHLEDY) */
+    .playlist-header { font-size: 16px; font-weight: bold; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; }
+    .playlist-items { display: flex; flex-direction: column; gap: 8px; }
+
+    .yt-card { display: flex; gap: 8px; cursor: pointer; padding: 4px; border-radius: 8px; transition: background 0.2s; }
+    .yt-card:hover { background: #272727; }
+    .yt-card.active { background: #272727; border-left: 4px solid #3ea6ff; }
+
+    .yt-thumb-wrapper { position: relative; width: 160px; aspect-ratio: 16 / 9; border-radius: 8px; overflow: hidden; background: #000; flex-shrink: 0; }
+    .yt-thumb-img { width: 100%; height: 100%; object-fit: cover; }
+    .yt-duration { position: absolute; bottom: 4px; right: 4px; background: rgba(0, 0, 0, 0.8); color: #fff; font-size: 11px; font-weight: bold; padding: 1px 4px; border-radius: 4px; }
+
+    .yt-thumb-progress-bg { position: absolute; bottom: 0; left: 0; width: 100%; height: 3px; background: rgba(255, 255, 255, 0.2); display: none; }
+    .yt-thumb-progress-fill { height: 100%; width: 0%; background: #ff0000; }
+    .yt-card.active .yt-thumb-progress-bg { display: block; }
+
+    .yt-details { display: flex; flex-direction: column; overflow: hidden; }
+    .yt-title { font-size: 14px; font-weight: 500; color: #f1f1f1; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; line-height: 1.2; margin-bottom: 4px; }
+    .yt-channel { font-size: 12px; color: #aaa; }
+    .yt-views { font-size: 12px; color: #aaa; }
+
+    /* RESPONSIVITA */
+    @media (max-width: 1000px) {
+      .yt-container { flex-direction: column; padding: 12px; }
+      .secondary-content { width: 100%; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- HORNÍ YOUTUBE LIŠTA -->
+  <header class="yt-header">
+    <div class="header-left">
+      <button class="menu-icon">☰</button>
+      <a href="#" class="logo">
+        <span style="color: #ff0000; font-size: 22px;">▶</span> YouTube <span class="logo-badge">CZ</span>
+      </a>
+    </div>
+
+    <div class="header-center">
+      <div class="search-box">
+        <input type="text" placeholder="Hledat">
+      </div>
+      <button class="search-btn">🔍</button>
+      <button class="mic-btn">🎙</button>
+    </div>
+
+    <div class="header-right">
+      <button class="upload-btn" onclick="document.getElementById('fileInput').click()">+ Vytvořit</button>
+      <input type="file" id="fileInput" accept="video/*,audio/*" multiple style="display: none;" onchange="handleFilesUpload(event)">
+      <div class="user-avatar" style="width: 32px; height: 32px; background: #3ea6ff; display: flex; align-items: center; justify-content: center; font-weight: bold; color: #000;">U</div>
+    </div>
+  </header>
+
+  <!-- HLAVNÍ OBSAH -->
+  <main class="yt-container">
+    
+    <!-- LEVÝ SLOUPEC: PŘEHRÁVAČ A INFORMACE -->
+    <section class="primary-content">
+      <div class="player-wrapper">
+        <video id="myVideo" controls></video>
+      </div>
+
+      <h1 class="video-title" id="videoTitle">Vyberte videa ze složky tlačítkem "+ Vytvořit"</h1>
+
+      <div class="channel-row">
+        <div class="channel-info">
+          <div class="channel-avatar">L</div>
+          <div>
+            <div class="channel-name">Lokální Přehravač</div>
+            <div class="channel-subs">Knihovna souborů</div>
+          </div>
+          <button class="sub-btn">Odebírat</button>
+        </div>
+
+        <div class="actions-row">
+          <button class="action-btn">👍 1,2 tis.</button>
+          <button class="action-btn">👎</button>
+          <button class="action-btn">↪ Sdílet</button>
+          <button class="action-btn">✂ Uložit</button>
+        </div>
+      </div>
+
+      <div class="description-box">
+        <div class="description-stats">125 tis. zhlédnutí • Před 2 dny</div>
+        <p id="descriptionText">Tato aplikace přehrává vaše lokální videoklipy v autentickém rozvržení stránky YouTube.</p>
+      </div>
+
+      <!-- KOMENTÁŘE -->
+      <div class="comments-section">
+        <div class="comments-header">Komentáře</div>
+        <div class="comment-input-box">
+          <div class="user-avatar"></div>
+          <input type="text" placeholder="Přidejte komentář...">
+        </div>
+      </div>
+    </section>
+
+    <!-- PRAVÝ SLOUPEC: SEZNAM VIDEÍ -->
+    <aside class="secondary-content">
+      <div class="playlist-header">
+        <span>Další v pořadí</span>
+      </div>
+      <div class="playlist-items" id="playlistContainer">
+        <div style="color: #aaa; font-size: 13px; text-align: center; margin-top: 20px;">Žádná videa v seznamu</div>
+      </div>
+    </aside>
+
+  </main>
+
+  <script>
+    let playlist = [];
+    let currentIndex = -1;
+
+    const video = document.getElementById('myVideo');
+
+    video.addEventListener('timeupdate', () => {
+      if (!isNaN(video.duration) && video.duration > 0) {
+        const progress = (video.currentTime / video.duration) * 100;
+        const activeThumbFill = document.getElementById(`thumb-fill-${currentIndex}`);
+        if (activeThumbFill) {
+          activeThumbFill.style.width = `${progress}%`;
+        }
+      }
+    });
+
+    video.addEventListener('ended', playNext);
+
+    async function handleFilesUpload(event) {
+      const files = Array.from(event.target.files);
+      if (files.length === 0) return;
+
+      for (const file of files) {
+        const fileURL = URL.createObjectURL(file);
+        const { thumb, duration } = await extractVideoData(fileURL);
+        
+        playlist.push({
+          title: file.name.replace(/\.[^/.]+$/, ""),
+          url: fileURL,
+          thumb: thumb,
+          duration: duration
+        });
+      }
+
+      renderPlaylist();
+      if (currentIndex === -1 && playlist.length > 0) {
+        loadTrack(0);
+      }
+    }
+
+    function extractVideoData(videoUrl) {
+      return new Promise((resolve) => {
+        const tempVideo = document.createElement('video');
+        tempVideo.src = videoUrl;
+        tempVideo.currentTime = 1;
+        tempVideo.muted = true;
+        
+        tempVideo.onloadedmetadata = () => {
+          const durationFormatted = formatTime(tempVideo.duration);
+          tempVideo.onseeked = () => {
+            const canvas = document.createElement('canvas');
+            canvas.width = 320;
+            canvas.height = 180;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(tempVideo, 0, 0, canvas.width, canvas.height);
+            resolve({ thumb: canvas.toDataURL(), duration: durationFormatted });
+          };
+        };
+
+        tempVideo.onerror = () => resolve({ thumb: '', duration: '0:00' });
+      });
+    }
+
+    function formatTime(seconds) {
+      if (isNaN(seconds)) return "0:00";
+      const mins = Math.floor(seconds / 60);
+      const secs = Math.floor(seconds % 60);
+      return `${mins}:${secs < 10 ? '0' : ''}${secs}`;
+    }
+
+    function renderPlaylist() {
+      const container = document.getElementById('playlistContainer');
+      container.innerHTML = '';
+
+      playlist.forEach((track, index) => {
+        const card = document.createElement('div');
+        card.className = `yt-card ${index === currentIndex ? 'active' : ''}`;
+        card.onclick = () => loadTrack(index);
+
+        card.innerHTML = `
+          <div class="yt-thumb-wrapper">
+            <img class="yt-thumb-img" src="${track.thumb || ''}" alt="thumbnail">
+            <span class="yt-duration">${track.duration}</span>
+            <div class="yt-thumb-progress-bg">
+              <div class="yt-thumb-progress-fill" id="thumb-fill-${index}"></div>
+            </div>
+          </div>
+          <div class="yt-details">
+            <div class="yt-title">${track.title}</div>
+            <div class="yt-channel">Lokální Video</div>
+            <div class="yt-views">Délka: ${track.duration}</div>
+          </div>
+        `;
+        container.appendChild(card);
+      });
+    }
+
+    function loadTrack(index) {
+      if (index < 0 || index >= playlist.length) return;
+      
+      currentIndex = index;
+      const track = playlist[currentIndex];
+      
+      video.src = track.url;
+      document.getElementById('videoTitle').textContent = track.title;
+      
+      video.play();
+      renderPlaylist();
+    }
+
+    function playNext() {
+      if (playlist.length === 0) return;
+      loadTrack((currentIndex + 1) % playlist.length);
+    }
+  </script>
+
+</body>
+</html>
