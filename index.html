@@ -17,7 +17,6 @@
       flex-direction: column;
     }
 
-    /* 1. VYHLEDÁVÁNÍ ODSTRANĚNO - ČISTÁ LIŠTA */
     .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; flex-shrink: 0; }
     .header-title { font-size: 18px; font-weight: bold; color: #fff; display: flex; align-items: center; gap: 8px; }
     .header-right { display: flex; gap: 12px; align-items: center; }
@@ -29,12 +28,10 @@
     .mode-btn { background: transparent; border: none; color: #aaa; padding: 6px 14px; border-radius: 14px; font-size: 12px; font-weight: 500; cursor: pointer; }
     .mode-btn.active { background: #f1f1f1; color: #0f0f0f; font-weight: bold; }
 
-    /* LAYOUT */
     .content-grid { display: flex; gap: 20px; flex-grow: 1; min-height: 0; }
     .player-section { flex: 2; display: flex; flex-direction: column; min-height: 0; }
     .playlist-section { flex: 1; min-width: 320px; max-width: 400px; display: flex; flex-direction: column; min-height: 0; background: #181818; padding: 16px; border-radius: 12px; }
 
-    /* 3. ODDĚLENÝ PANEL PRO MP3 A VIDEO */
     .media-box { width: 100%; flex-grow: 1; background: #000; border-radius: 12px; overflow: hidden; display: flex; justify-content: center; align-items: center; margin-bottom: 12px; min-height: 0; position: relative; }
     video { width: 100%; height: 100%; object-fit: contain; }
     
@@ -45,11 +42,10 @@
     .audio-only video { display: none; }
     .audio-only .audio-card { display: flex; }
 
-    .track-info { margin-bottom: 10px; flex-shrink: 0; }
+    .track-info { margin-bottom: 10px; flex-shrink: 0; display: flex; justify-content: space-between; align-items: center; }
     .track-title { font-size: 18px; font-weight: bold; margin-bottom: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     .track-artist { font-size: 13px; color: #aaa; }
 
-    /* 2. PLNOHODNOTNÉ OVLÁDÁNÍ */
     .controls-bar { background: #181818; padding: 12px 16px; border-radius: 12px; display: flex; flex-direction: column; gap: 10px; flex-shrink: 0; }
     
     .progress-container { display: flex; align-items: center; gap: 12px; }
@@ -67,13 +63,12 @@
     .volume-bar { width: 80px; -webkit-appearance: none; appearance: none; height: 4px; background: #444; border-radius: 2px; outline: none; cursor: pointer; }
     .volume-bar::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; width: 10px; height: 10px; border-radius: 50%; background: #fff; cursor: pointer; }
 
-    /* PLAYLIST */
     .playlist-title { font-size: 15px; font-weight: bold; color: #f1f1f1; margin-bottom: 12px; flex-shrink: 0; }
     .playlist-items { overflow-y: auto; flex-grow: 1; display: flex; flex-direction: column; gap: 10px; padding-right: 4px; }
     .playlist-items::-webkit-scrollbar { width: 6px; }
     .playlist-items::-webkit-scrollbar-thumb { background: #373737; border-radius: 4px; }
 
-    .yt-card { display: flex; gap: 10px; padding: 6px; border-radius: 8px; cursor: pointer; transition: background 0.2s; }
+    .yt-card { display: flex; gap: 10px; padding: 6px; border-radius: 8px; cursor: pointer; transition: background 0.2s; align-items: center; }
     .yt-card:hover { background: #272727; }
     .yt-card.active { background: #272727; border-left: 3px solid #ff0000; }
 
@@ -81,9 +76,12 @@
     .yt-thumb-img { width: 100%; height: 100%; object-fit: cover; }
     .yt-duration { position: absolute; bottom: 4px; right: 4px; background: rgba(0, 0, 0, 0.8); color: #fff; font-size: 10px; font-weight: bold; padding: 2px 4px; border-radius: 4px; }
 
-    .yt-details { display: flex; flex-direction: column; justify-content: center; overflow: hidden; }
+    .yt-details { display: flex; flex-direction: column; justify-content: center; overflow: hidden; flex-grow: 1; }
     .yt-title { font-size: 13px; font-weight: 500; color: #f1f1f1; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; line-height: 1.3; }
     .yt-channel { font-size: 11px; color: #aaa; margin-top: 4px; }
+
+    .btn-delete-item { background: none; border: none; color: #888; font-size: 16px; cursor: pointer; padding: 6px; border-radius: 4px; transition: color 0.2s; }
+    .btn-delete-item:hover { color: #ff4444; }
   </style>
 </head>
 <body>
@@ -113,8 +111,11 @@
         </div>
 
         <div class="track-info">
-          <div class="track-title" id="trackTitle">Vyberte soubory tlačítkem "+ Nahrát soubory"</div>
-          <div class="track-artist" id="trackArtist">Lokální Knihovna</div>
+          <div style="overflow: hidden; padding-right: 10px;">
+            <div class="track-title" id="trackTitle">Vyberte soubory tlačítkem "+ Nahrát soubory"</div>
+            <div class="track-artist" id="trackArtist">Lokální Knihovna</div>
+          </div>
+          <button class="btn-icon" onclick="deleteCurrentTrack()" title="Smazat aktuální" style="color: #ff4444; font-size: 18px; flex-shrink: 0;">🗑</button>
         </div>
 
         <div class="controls-bar">
@@ -174,7 +175,14 @@
 
     progressBar.addEventListener('input', () => {
       if (!isNaN(video.duration) && video.duration > 0) {
-        video.currentTime = (progressBar.value / 100) * video.duration;
+        if (progressBar.value >= 99.5) {
+          video.currentTime = video.duration - 0.1;
+          video.pause();
+          btnPlay.textContent = '▶';
+          audioDisc.style.animationPlayState = 'paused';
+        } else {
+          video.currentTime = (progressBar.value / 100) * video.duration;
+        }
       }
     });
 
@@ -237,6 +245,11 @@
       const container = document.getElementById('playlistContainer');
       container.innerHTML = '';
 
+      if (playlist.length === 0) {
+        container.innerHTML = '<div style="color: #aaa; font-size: 12px; text-align: center; margin-top: 20px;">Žádné soubory v seznamu</div>';
+        return;
+      }
+
       playlist.forEach((track, index) => {
         const card = document.createElement('div');
         card.className = `yt-card ${index === currentIndex ? 'active' : ''}`;
@@ -255,6 +268,7 @@
             <div class="yt-title">${track.title}</div>
             <div class="yt-channel">${track.type.toUpperCase()} Soubor</div>
           </div>
+          <button class="btn-delete-item" onclick="deleteTrack(${index}, event)" title="Smazat ze seznamu">✕</button>
         `;
         container.appendChild(card);
       });
@@ -327,6 +341,36 @@
         card.classList.remove('audio-only');
         btnMp4.classList.add('active');
         btnMp3.classList.remove('active');
+      }
+    }
+
+    function deleteTrack(index, event) {
+      if (event) event.stopPropagation();
+
+      playlist.splice(index, 1);
+
+      if (playlist.length === 0) {
+        currentIndex = -1;
+        video.src = '';
+        document.getElementById('trackTitle').textContent = 'Vyberte soubory tlačítkem "+ Nahrát soubory"';
+        document.getElementById('audioTrackTitle').textContent = 'Audio Režim';
+        btnPlay.textContent = '▶';
+        audioDisc.style.animationPlayState = 'paused';
+      } else if (index === currentIndex) {
+        if (currentIndex >= playlist.length) {
+          currentIndex = 0;
+        }
+        loadTrack(currentIndex);
+      } else if (index < currentIndex) {
+        currentIndex--;
+      }
+
+      renderPlaylist();
+    }
+
+    function deleteCurrentTrack() {
+      if (currentIndex !== -1 && playlist.length > 0) {
+        deleteTrack(currentIndex);
       }
     }
   </script>
