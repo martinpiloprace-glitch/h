@@ -1,169 +1,314 @@
 <!DOCTYPE html>
 <html lang="cs">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>YouTube Style Player</title>
-  <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; font-family: "Roboto", Arial, sans-serif; }
-    body { background-color: #0f0f0f; color: #f1f1f1; display: flex; justify-content: center; align-items: center; min-height: 100vh; padding: 20px; }
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Můj Přehrávač</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
 
-    .player-card {
-      background-color: #0f0f0f;
-      width: 100%;
-      max-width: 1280px;
-      height: 85vh;
-      display: flex;
-      flex-direction: column;
-    }
+        body {
+            background-color: #121212;
+            color: #ffffff;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+            padding: 20px;
+        }
 
-    .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; flex-shrink: 0; }
-    .header-title { font-size: 18px; font-weight: bold; color: #fff; display: flex; align-items: center; gap: 8px; }
-    .header-right { display: flex; gap: 12px; align-items: center; }
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
 
-    .upload-btn { background: #ff0000; color: #fff; border: none; padding: 8px 16px; border-radius: 18px; font-size: 13px; font-weight: bold; cursor: pointer; transition: 0.2s; }
-    .upload-btn:hover { background: #cc0000; }
+        .logo {
+            color: #ff0000;
+            font-size: 24px;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
 
-    .mode-switch { display: flex; gap: 4px; background: #272727; padding: 4px; border-radius: 18px; }
-    .mode-btn { background: transparent; border: none; color: #aaa; padding: 6px 14px; border-radius: 14px; font-size: 12px; font-weight: 500; cursor: pointer; }
-    .mode-btn.active { background: #f1f1f1; color: #0f0f0f; font-weight: bold; }
+        .btn-container {
+            display: flex;
+            gap: 10px;
+        }
 
-    .content-grid { display: flex; gap: 20px; flex-grow: 1; min-height: 0; }
-    .player-section { flex: 2; display: flex; flex-direction: column; min-height: 0; }
-    .playlist-section { flex: 1; min-width: 320px; max-width: 400px; display: flex; flex-direction: column; min-height: 0; background: #181818; padding: 16px; border-radius: 12px; }
+        .btn-upload {
+            background: #272727;
+            color: white;
+            border: 1px solid #3f3f3f;
+            padding: 8px 16px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
 
-    .media-box { width: 100%; flex-grow: 1; background: #000; border-radius: 12px; overflow: hidden; display: flex; justify-content: center; align-items: center; margin-bottom: 12px; min-height: 0; position: relative; }
-    video { width: 100%; height: 100%; object-fit: contain; }
-    
-    .audio-card { display: none; width: 100%; height: 100%; background: linear-gradient(135deg, #1f1c2c, #928dab); flex-direction: column; justify-content: center; align-items: center; border-radius: 12px; }
-    .audio-disc { width: 120px; height: 120px; border-radius: 50%; background: #0f0f0f; border: 4px solid #ff0000; display: flex; justify-content: center; align-items: center; font-size: 45px; margin-bottom: 12px; animation: spin 4s linear infinite; animation-play-state: paused; }
-    @keyframes spin { 100% { transform: rotate(360deg); } }
+        .btn-upload:hover {
+            background: #3f3f3f;
+        }
 
-    .audio-only video { display: none; }
-    .audio-only .audio-card { display: flex; }
+        .btn-supabase {
+            background: #e50914;
+            border: none;
+        }
 
-    .track-info { margin-bottom: 10px; flex-shrink: 0; display: flex; justify-content: space-between; align-items: center; }
-    .track-title { font-size: 18px; font-weight: bold; margin-bottom: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .track-artist { font-size: 13px; color: #aaa; }
+        .btn-supabase:hover {
+            background: #b80710;
+        }
 
-    .controls-bar { background: #181818; padding: 12px 16px; border-radius: 12px; display: flex; flex-direction: column; gap: 10px; flex-shrink: 0; }
-    
-    .progress-container { display: flex; align-items: center; gap: 12px; }
-    .time-display { font-size: 12px; color: #aaa; font-variant-numeric: tabular-nums; min-width: 38px; text-align: center; }
-    .progress-bar { flex-grow: 1; -webkit-appearance: none; appearance: none; height: 5px; border-radius: 3px; background: #444; outline: none; cursor: pointer; }
-    .progress-bar::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; width: 14px; height: 14px; border-radius: 50%; background: #ff0000; cursor: pointer; }
+        .main-content {
+            display: flex;
+            gap: 20px;
+            flex: 1;
+        }
 
-    .buttons-row { display: flex; justify-content: space-between; align-items: center; }
-    .left-controls, .right-controls { display: flex; align-items: center; gap: 16px; }
-    .btn-play { width: 42px; height: 42px; border-radius: 50%; background: #ff0000; border: none; font-size: 16px; cursor: pointer; color: #fff; display: flex; justify-content: center; align-items: center; }
-    .btn-icon { background: none; border: none; color: #fff; font-size: 20px; cursor: pointer; opacity: 0.8; }
-    .btn-icon:hover { opacity: 1; }
-    
-    .volume-box { display: flex; align-items: center; gap: 8px; }
-    .volume-bar { width: 80px; -webkit-appearance: none; appearance: none; height: 4px; background: #444; border-radius: 2px; outline: none; cursor: pointer; }
-    .volume-bar::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; width: 10px; height: 10px; border-radius: 50%; background: #fff; cursor: pointer; }
+        .player-section {
+            flex: 2;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
 
-    .playlist-title { font-size: 15px; font-weight: bold; color: #f1f1f1; margin-bottom: 12px; flex-shrink: 0; }
-    .playlist-items { overflow-y: auto; flex-grow: 1; display: flex; flex-direction: column; gap: 10px; padding-right: 4px; }
-    .playlist-items::-webkit-scrollbar { width: 6px; }
-    .playlist-items::-webkit-scrollbar-thumb { background: #373737; border-radius: 4px; }
+        .video-wrapper {
+            width: 100%;
+            aspect-ratio: 16/9;
+            background: #000;
+            border-radius: 12px;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
 
-    .yt-card { display: flex; gap: 10px; padding: 6px; border-radius: 8px; cursor: pointer; transition: background 0.2s; align-items: center; }
-    .yt-card:hover { background: #272727; }
-    .yt-card.active { background: #272727; border-left: 3px solid #ff0000; }
+        video {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+        }
 
-    .yt-thumb-wrapper { position: relative; width: 120px; height: 68px; border-radius: 8px; overflow: hidden; background: #000; flex-shrink: 0; }
-    .yt-thumb-img { width: 100%; height: 100%; object-fit: cover; }
-    .yt-duration { position: absolute; bottom: 4px; right: 4px; background: rgba(0, 0, 0, 0.8); color: #fff; font-size: 10px; font-weight: bold; padding: 2px 4px; border-radius: 4px; }
+        .controls-bar {
+            background: #1f1f1f;
+            padding: 15px;
+            border-radius: 12px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
 
-    .yt-details { display: flex; flex-direction: column; justify-content: center; overflow: hidden; flex-grow: 1; }
-    .yt-title { font-size: 13px; font-weight: 500; color: #f1f1f1; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; line-height: 1.3; }
-    .yt-channel { font-size: 11px; color: #aaa; margin-top: 4px; }
+        .track-info {
+            font-size: 16px;
+            font-weight: bold;
+        }
 
-    .btn-delete-item { background: none; border: none; color: #888; font-size: 16px; cursor: pointer; padding: 6px; border-radius: 4px; transition: color 0.2s; }
-    .btn-delete-item:hover { color: #ff4444; }
-  </style>
+        .progress-container {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        input[type="range"] {
+            flex: 1;
+            accent-color: #ff0000;
+            cursor: pointer;
+        }
+
+        .buttons-row {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .btn-ctrl {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 20px;
+            cursor: pointer;
+        }
+
+        .btn-play {
+            background: #ff0000;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .playlist-section {
+            flex: 1;
+            background: #1f1f1f;
+            border-radius: 12px;
+            padding: 15px;
+            display: flex;
+            flex-direction: column;
+            max-height: 80vh;
+        }
+
+        .playlist-title {
+            font-size: 16px;
+            margin-bottom: 15px;
+            color: #aaa;
+        }
+
+        .playlist-items {
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .pl-card {
+            display: flex;
+            gap: 10px;
+            background: #121212;
+            padding: 8px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+
+        .pl-card:hover, .pl-card.active {
+            background: #272727;
+            border-left: 4px solid #ff0000;
+        }
+
+        .pl-thumb-wrapper {
+            width: 100px;
+            height: 56px;
+            background: #000;
+            border-radius: 4px;
+            overflow: hidden;
+            flex-shrink: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .pl-thumb-img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .pl-details {
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            overflow: hidden;
+        }
+
+        .pl-title {
+            font-size: 13px;
+            font-weight: 500;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .pl-channel {
+            font-size: 11px;
+            color: #aaa;
+        }
+
+        .btn-delete-item {
+            background: none;
+            border: none;
+            color: #ff4d4d;
+            font-size: 11px;
+            cursor: pointer;
+            text-align: left;
+            padding: 0;
+        }
+
+        .empty-msg {
+            text-align: center;
+            color: #777;
+            margin-top: 20px;
+            font-size: 14px;
+        }
+    </style>
 </head>
 <body>
 
-  <div class="player-card" id="playerCard">
     <div class="header">
-      <div class="header-title"><span style="color: #ff0000;">▶</span> Můj Přehravač</div>
-      <div class="header-right">
-        <button class="upload-btn" onclick="document.getElementById('fileInput').click()">+ Nahrát soubory</button>
-        <input type="file" id="fileInput" accept="video/*,audio/*" multiple style="display: none;" onchange="handleFilesUpload(event)">
-        
-        <div class="mode-switch">
-          <button class="mode-btn active" id="btnMp4" onclick="setMode('mp4')">MP4 Video</button>
-          <button class="mode-btn" id="btnMp3" onclick="setMode('mp3')">MP3 Audio</button>
+        <div class="logo">
+            <span>▶</span> Můj Přehrávač
         </div>
-      </div>
+        <div class="btn-container">
+            <!-- Tlačítko pro stažení ze Supabase -->
+            <button class="btn-upload btn-supabase" onclick="loadPlaylistFromSupabase()">☁ Načíst ze Supabase</button>
+            
+            <!-- Tlačítko pro výběr z PC -->
+            <label class="btn-upload">
+                + Nahrát soubory
+                <input type="file" id="fileInput" multiple accept="video/*,audio/*" style="display: none;" onchange="handleFileUpload(event)">
+            </label>
+        </div>
     </div>
 
-    <div class="content-grid">
-      <div class="player-section">
-        <div class="media-box">
-          <video id="myVideo"></video>
-          <div class="audio-card">
-            <div class="audio-disc" id="audioDisc">🎵</div>
-            <div style="font-size: 14px; font-weight: bold; color: #fff;" id="audioTrackTitle">Audio Režim</div>
-          </div>
-        </div>
-
-        <div class="track-info">
-          <div style="overflow: hidden; padding-right: 10px;">
-            <div class="track-title" id="trackTitle">Vyberte soubory tlačítkem "+ Nahrát soubory"</div>
-            <div class="track-artist" id="trackArtist">Lokální Knihovna</div>
-          </div>
-          <button class="btn-icon" onclick="deleteCurrentTrack()" title="Smazat aktuální" style="color: #ff4444; font-size: 18px; flex-shrink: 0;">🗑</button>
-        </div>
-
-        <div class="controls-bar">
-          <div class="progress-container">
-            <span class="time-display" id="currentTime">0:00</span>
-            <input type="range" class="progress-bar" id="progressBar" value="0" min="0" max="100">
-            <span class="time-display" id="duration">0:00</span>
-          </div>
-
-          <div class="buttons-row">
-            <div class="left-controls">
-              <button class="btn-icon" onclick="playPrev()">⏮</button>
-              <button class="btn-play" id="btnPlay" onclick="playPause()">▶</button>
-              <button class="btn-icon" onclick="playNext()">⏭</button>
-              
-              <div class="volume-box">
-                <button class="btn-icon" style="font-size: 16px;" onclick="toggleMute()">🔊</button>
-                <input type="range" class="volume-bar" id="volumeBar" min="0" max="1" step="0.05" value="1" oninput="setVolume(this.value)">
-              </div>
+    <div class="main-content">
+        <!-- Levá část: Přehrávač -->
+        <div class="player-section">
+            <div class="video-wrapper">
+                <video id="myVideo"></video>
             </div>
-
-            <div class="right-controls">
-              <button class="btn-icon" onclick="toggleFullscreen()">⛶</button>
+            <div class="controls-bar">
+                <div class="track-info" id="trackTitle">Klikněte na tlačítko výše pro načtení skladeb</div>
+                <div class="progress-container">
+                    <span id="currenttime">0:00</span>
+                    <input type="range" id="progressbar" value="0" min="0" max="100">
+                    <span id="duration">0:00</span>
+                </div>
+                <div class="buttons-row">
+                    <button class="btn-ctrl" onclick="playPrev()">⏮</button>
+                    <button class="btn-ctrl btn-play" id="btnPlay" onclick="playPause()">▶</button>
+                    <button class="btn-ctrl" onclick="playNext()">⏭</button>
+                </div>
             </div>
-          </div>
         </div>
-      </div>
 
-      <div class="playlist-section">
-        <div class="playlist-title">Seznam skladeb / videí</div>
-        <div class="playlist-items" id="playlistContainer">
-          <div style="color: #aaa; font-size: 12px; text-align: center; margin-top: 20px;">Žádné soubory v seznamu</div>
+        <!-- Pravá část: Seznam skladeb -->
+        <div class="playlist-section">
+            <div class="playlist-title">Seznam skladeb / videí</div>
+            <div class="playlist-items" id="playlistContainer">
+                <div class="empty-msg">Žádné soubory v seznamu</div>
+            </div>
         </div>
-      </div>
     </div>
-  </div>
 
-<script>
-        // Konfigurace Supabase
+    <script>
         const SUPABASE_PROJECT_URL = 'https://uiwwvtruinrgdpvtiott.supabase.co';
 
-        // Globální proměnné
         let playlist = [];
         let currentIndex = -1;
 
-        // 1. Funkce pro načtení videí ze Supabase
+        const video = document.getElementById('myVideo');
+        const progressbar = document.getElementById('progressbar');
+        const currenttime1 = document.getElementById('currenttime');
+        const duration1 = document.getElementById('duration');
+        const trackTitle = document.getElementById('trackTitle');
+        const btnPlay = document.getElementById('btnPlay');
+
+        // Načtení seznamu ze Supabase po kliknutí na tlačítko
         async function loadPlaylistFromSupabase() {
             try {
+                if (trackTitle) trackTitle.textContent = "Načítám seznam ze Supabase...";
+                
                 const response = await fetch(`${SUPABASE_PROJECT_URL}/storage/v1/object/list/videa`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -195,47 +340,12 @@
                     }
                 }
             } catch (error) {
-                console.error('Chyba při načítání playlistu ze Supabase:', error);
+                console.error('Chyba při načítání ze Supabase:', error);
+                if (trackTitle) trackTitle.textContent = "Chyba při načítání skladeb.";
             }
         }
 
-        // Spustí načítání ze Supabase při otevření stránky
-        window.addEventListener('DOMContentLoaded', loadPlaylistFromSupabase);
-
-        // --- ZDE POKRAČUJÍ TVOJE STÁVAJÍCÍ FUNKCE ---
-
-        const video = document.getElementById('myVideo');
-        const progressbar = document.getElementById('progressbar');
-        const currenttime1 = document.getElementById('currenttime');
-        const duration1 = document.getElementById('duration');
-        const trackTitle = document.getElementById('trackTitle');
-        const audioDiv = document.getElementById('audioDiv');
-
-        video.addEventListener('timeupdate', () => {
-            if (video.duration && !isNaN(video.duration)) {
-                const progress = (video.currentTime / video.duration) * 100;
-                progressbar.value = progress;
-                currenttime1.textContent = formatTime(video.currentTime);
-                duration1.textContent = formatTime(video.duration);
-            }
-        });
-
-        progressbar.addEventListener('input', () => {
-            if (video.duration && !isNaN(video.duration)) {
-                if (progressbar.value > 99.5) {
-                    video.currentTime = video.duration - 0.1;
-                    video.pause();
-                    btnPlay.textContent = '▶';
-                    audioDiv.style.animationPlayState = 'paused';
-                } else {
-                    video.currentTime = (progressbar.value / 100) * video.duration;
-                }
-            }
-        });
-
-        video.addEventListener('ended', playNext);
-
-        // Funkce pro ruční nahrání souborů z PC (ponechána)
+        // Ruční nahrání z PC
         async function handleFileUpload(event) {
             const files = Array.from(event.target.files);
             if (files.length === 0) return;
@@ -281,6 +391,33 @@
             });
         }
 
+        if (video) {
+            video.addEventListener('timeupdate', () => {
+                if (video.duration && !isNaN(video.duration)) {
+                    const progress = (video.currentTime / video.duration) * 100;
+                    if (progressbar) progressbar.value = progress;
+                    if (currenttime1) currenttime1.textContent = formatTime(video.currentTime);
+                    if (duration1) duration1.textContent = formatTime(video.duration);
+                }
+            });
+
+            video.addEventListener('ended', playNext);
+        }
+
+        if (progressbar) {
+            progressbar.addEventListener('input', () => {
+                if (video && video.duration && !isNaN(video.duration)) {
+                    if (progressbar.value > 99.5) {
+                        video.currentTime = video.duration - 0.1;
+                        video.pause();
+                        if (btnPlay) btnPlay.textContent = '▶';
+                    } else {
+                        video.currentTime = (progressbar.value / 100) * video.duration;
+                    }
+                }
+            });
+        }
+
         function formatTime(seconds) {
             if (isNaN(seconds)) return "0:00";
             const mins = Math.floor(seconds / 60);
@@ -293,6 +430,11 @@
             if (!container) return;
             container.innerHTML = '';
 
+            if (playlist.length === 0) {
+                container.innerHTML = '<div class="empty-msg">Žádné soubory v seznamu</div>';
+                return;
+            }
+
             playlist.forEach((track, index) => {
                 const card = document.createElement('div');
                 card.className = `pl-card ${index === currentIndex ? 'active' : ''}`;
@@ -300,8 +442,7 @@
 
                 card.innerHTML = `
                     <div class="pl-thumb-wrapper">
-                        ${track.thumb ? `<img class="pl-thumb-img" src="${track.thumb}">` : '<div style="width:160px;height:100px;display:flex;align-items:center;justify-content:center;background:#272727;font-size:24px;">🎵</div>'}
-                        <span class="pl-duration">${track.duration}</span>
+                        ${track.thumb ? `<img class="pl-thumb-img" src="${track.thumb}">` : '<span style="font-size:20px;">🎵</span>'}
                     </div>
                     <div class="pl-details">
                         <div class="pl-title">${track.title}</div>
@@ -319,12 +460,8 @@
             currentIndex = index;
             const track = playlist[index];
 
-            video.src = track.url;
+            if (video) video.src = track.url;
             if (trackTitle) trackTitle.textContent = track.title;
-            const mediaTrackTitle = document.getElementById('mediaTrackTitle');
-            if (mediaTrackTitle) mediaTrackTitle.textContent = track.title;
-
-            if (audioDiv) audioDiv.style.animationPlayState = 'running';
 
             renderPlaylist();
         }
@@ -334,22 +471,24 @@
             if (video.paused) {
                 video.play();
                 if (btnPlay) btnPlay.textContent = '⏸';
-                if (audioDiv) audioDiv.style.animationPlayState = 'running';
             } else {
                 video.pause();
                 if (btnPlay) btnPlay.textContent = '▶';
-                if (audioDiv) audioDiv.style.animationPlayState = 'paused';
             }
         }
 
         function playNext() {
             if (playlist.length === 0) return;
             loadTrack((currentIndex + 1) % playlist.length);
+            if (video) video.play();
+            if (btnPlay) btnPlay.textContent = '⏸';
         }
 
         function playPrev() {
             if (playlist.length === 0) return;
             loadTrack((currentIndex - 1 + playlist.length) % playlist.length);
+            if (video) video.play();
+            if (btnPlay) btnPlay.textContent = '⏸';
         }
 
         function deleteTrack(index, event) {
@@ -357,8 +496,8 @@
             playlist.splice(index, 1);
 
             if (playlist.length === 0) {
-                video.src = '';
-                if (trackTitle) trackTitle.textContent = 'Vyberte soubory tlačítkem "Nahrát soubory"';
+                if (video) video.src = '';
+                if (trackTitle) trackTitle.textContent = 'Žádné soubory v seznamu';
                 currentIndex = -1;
             } else if (index === currentIndex) {
                 currentIndex = currentIndex >= playlist.length ? 0 : currentIndex;
