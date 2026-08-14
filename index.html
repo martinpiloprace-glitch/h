@@ -1,515 +1,72 @@
 <!DOCTYPE html>
 <html lang="cs">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Můj Přehrávač</title>
-    <style>
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        }
-
-        body {
-            background-color: #121212;
-            color: #ffffff;
-            display: flex;
-            flex-direction: column;
-            min-height: 100vh;
-            padding: 20px;
-        }
-
-        .header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 20px;
-        }
-
-        .logo {
-            color: #ff0000;
-            font-size: 24px;
-            font-weight: bold;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .btn-container {
-            display: flex;
-            gap: 10px;
-        }
-
-        .btn-upload {
-            background: #272727;
-            color: white;
-            border: 1px solid #3f3f3f;
-            padding: 8px 16px;
-            border-radius: 20px;
-            cursor: pointer;
-            font-weight: 500;
-            transition: 0.2s;
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-        }
-
-        .btn-upload:hover {
-            background: #3f3f3f;
-        }
-
-        .btn-supabase {
-            background: #e50914;
-            border: none;
-        }
-
-        .btn-supabase:hover {
-            background: #b80710;
-        }
-
-        .main-content {
-            display: flex;
-            gap: 20px;
-            flex: 1;
-        }
-
-        .player-section {
-            flex: 2;
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
-        }
-
-        .video-wrapper {
-            width: 100%;
-            aspect-ratio: 16/9;
-            background: #000;
-            border-radius: 12px;
-            overflow: hidden;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        video {
-            width: 100%;
-            height: 100%;
-            object-fit: contain;
-        }
-
-        .controls-bar {
-            background: #1f1f1f;
-            padding: 15px;
-            border-radius: 12px;
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-        }
-
-        .track-info {
-            font-size: 16px;
-            font-weight: bold;
-        }
-
-        .progress-container {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        input[type="range"] {
-            flex: 1;
-            accent-color: #ff0000;
-            cursor: pointer;
-        }
-
-        .buttons-row {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-        }
-
-        .btn-ctrl {
-            background: none;
-            border: none;
-            color: white;
-            font-size: 20px;
-            cursor: pointer;
-        }
-
-        .btn-play {
-            background: #ff0000;
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .playlist-section {
-            flex: 1;
-            background: #1f1f1f;
-            border-radius: 12px;
-            padding: 15px;
-            display: flex;
-            flex-direction: column;
-            max-height: 80vh;
-        }
-
-        .playlist-title {
-            font-size: 16px;
-            margin-bottom: 15px;
-            color: #aaa;
-        }
-
-        .playlist-items {
-            overflow-y: auto;
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-        }
-
-        .pl-card {
-            display: flex;
-            gap: 10px;
-            background: #121212;
-            padding: 8px;
-            border-radius: 8px;
-            cursor: pointer;
-            transition: 0.2s;
-        }
-
-        .pl-card:hover, .pl-card.active {
-            background: #272727;
-            border-left: 4px solid #ff0000;
-        }
-
-        .pl-thumb-wrapper {
-            width: 100px;
-            height: 56px;
-            background: #000;
-            border-radius: 4px;
-            overflow: hidden;
-            flex-shrink: 0;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .pl-thumb-img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-        }
-
-        .pl-details {
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
-            overflow: hidden;
-        }
-
-        .pl-title {
-            font-size: 13px;
-            font-weight: 500;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-        }
-
-        .pl-channel {
-            font-size: 11px;
-            color: #aaa;
-        }
-
-        .btn-delete-item {
-            background: none;
-            border: none;
-            color: #ff4d4d;
-            font-size: 11px;
-            cursor: pointer;
-            text-align: left;
-            padding: 0;
-        }
-
-        .empty-msg {
-            text-align: center;
-            color: #777;
-            margin-top: 20px;
-            font-size: 14px;
-        }
-    </style>
+  <meta charset="UTF-8">
+  <title>Můj Vlastní Video Přehrávač</title>
+  <style>
+    body { background: #121212; color: #fff; font-family: sans-serif; display: flex; gap: 20px; padding: 20px; }
+    #player-container { flex: 2; }
+    video { width: 100%; max-height: 80vh; background: #000; border-radius: 8px; }
+    #playlist { flex: 1; background: #1e1e1e; padding: 15px; border-radius: 8px; max-height: 80vh; overflow-y: auto; }
+    .video-item { padding: 10px; border-bottom: 1px solid #333; cursor: pointer; }
+    .video-item:hover { background: #333; }
+  </style>
 </head>
 <body>
 
-    <div class="header">
-        <div class="logo">
-            <span>▶</span> Můj Přehrávač
-        </div>
-        <div class="btn-container">
-            <button class="btn-upload btn-supabase" onclick="loadPlaylistFromSupabase()">☁ Načíst ze Supabase</button>
-            <label class="btn-upload">
-                + Nahrát soubory
-                <input type="file" id="fileInput" multiple accept="video/*,audio/*" style="display: none;" onchange="handleFileUpload(event)">
-            </label>
-        </div>
-    </div>
+  <div id="player-container">
+    <video id="mainPlayer" controls autoplay></video>
+    <h2 id="videoTitle">Vyber video ze seznamu</h2>
+  </div>
 
-    <div class="main-content">
-        <div class="player-section">
-            <div class="video-wrapper">
-                <video id="myVideo"></video>
-            </div>
-            <div class="controls-bar">
-                <div class="track-info" id="trackTitle">Klikněte na tlačítko výše pro načtení skladeb</div>
-                <div class="progress-container">
-                    <span id="currenttime">0:00</span>
-                    <input type="range" id="progressbar" value="0" min="0" max="100">
-                    <span id="duration">0:00</span>
-                </div>
-                <div class="buttons-row">
-                    <button class="btn-ctrl" onclick="playPrev()">⏮</button>
-                    <button class="btn-ctrl btn-play" id="btnPlay" onclick="playPause()">▶</button>
-                    <button class="btn-ctrl" onclick="playNext()">⏭</button>
-                </div>
-            </div>
-        </div>
+  <div id="playlist">
+    <h3>Moje Videa</h3>
+    <div id="videoList">Načítám...</div>
+  </div>
 
-        <div class="playlist-section">
-            <div class="playlist-title">Seznam skladeb / videí</div>
-            <div class="playlist-items" id="playlistContainer">
-                <div class="empty-msg">Žádné soubory v seznamu</div>
-            </div>
-        </div>
-    </div>
+  <script type="module">
+    import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm'
 
-    <script>
-        // Kompletní Publishable key z tvého projektu
-        const SUPABASE_ANON_KEY = 'sb_publishable_ekDiPiW4YGpmP3tWDpSokg_UIzML'; 
-        const SUPABASE_PROJECT_URL = 'https://uiwwvtruinrgdpvtiott.supabase.co';
+    const SUPABASE_URL = 'https://uiwwtruinrgdpvtiott.supabase.co'
+    // Použij svůj klíč ze Supabase
+    const SUPABASE_KEY = 'sb_publishable_ekDiPiW4YGpmP3tWDpSokg_UIzML...' 
 
-        let playlist = [];
-        let currentIndex = -1;
+    const supabase = createClient(SUPABASE_URL, SUPABASE_KEY)
 
-        const video = document.getElementById('myVideo');
-        const progressbar = document.getElementById('progressbar');
-        const currenttime1 = document.getElementById('currenttime');
-        const duration1 = document.getElementById('duration');
-        const trackTitle = document.getElementById('trackTitle');
-        const btnPlay = document.getElementById('btnPlay');
+    async function loadVideos() {
+      // Načtení seznamu souborů z bucketu 'videa'
+      const { data, error } = await supabase.storage.from('videa').list()
 
-        async function loadPlaylistFromSupabase() {
-            try {
-                if (trackTitle) trackTitle.textContent = "Načítám seznam ze Supabase...";
-                
-                const response = await fetch(`${SUPABASE_PROJECT_URL}/storage/v1/object/list/videa`, {
-                    method: 'POST',
-                    headers: { 
-                        'Content-Type': 'application/json',
-                        'apikey': SUPABASE_ANON_KEY,
-                        'Authorization': `Bearer ${SUPABASE_ANON_KEY}`
-                    },
-                    body: JSON.stringify({ limit: 500, offset: 0, sortBy: { column: 'name', order: 'asc' } })
-                });
+      if (error) {
+        console.error('Chyba načítání:', error)
+        document.getElementById('videoList').innerText = 'Chyba při načítání videí.'
+        return
+      }
 
-                if (!response.ok) {
-                    throw new Error(`HTTP chyba: ${response.status}`);
-                }
+      const listContainer = document.getElementById('videoList')
+      listContainer.innerHTML = ''
 
-                const files = await response.json();
+      data.forEach(file => {
+        // Ignorujeme složky nebo systémové soubory
+        if (file.name === '.emptyFolderPlaceholder') return
 
-                if (Array.isArray(files)) {
-                    playlist = files
-                        .filter(file => file.name !== '.emptyFolderPlaceholder')
-                        .map(file => {
-                            const publicUrl = `${SUPABASE_PROJECT_URL}/storage/v1/object/public/videa/${encodeURIComponent(file.name)}`;
-                            const cleanTitle = file.name.replace(/\.[^/.]+$/, "").replace(/[-_]/g, " ");
+        const item = document.createElement('div')
+        item.className = 'video-item'
+        item.innerText = file.name
 
-                            return {
-                                title: cleanTitle,
-                                url: publicUrl,
-                                thumb: '',
-                                duration: '0:00',
-                                type: 'mp4'
-                            };
-                        });
-
-                    renderPlaylist();
-
-                    if (playlist.length > 0) {
-                        loadTrack(0);
-                    }
-                }
-            } catch (error) {
-                console.error('Chyba při načítání ze Supabase:', error);
-                if (trackTitle) trackTitle.textContent = "Chyba při načítání skladeb.";
-            }
+        item.onclick = () => {
+          // Získání veřejné URL adresy konkrétního videa
+          const { data: urlData } = supabase.storage.from('videa').getPublicUrl(file.name)
+          const player = document.getElementById('mainPlayer')
+          player.src = urlData.publicUrl
+          document.getElementById('videoTitle').innerText = file.name
         }
 
-        async function handleFileUpload(event) {
-            const files = Array.from(event.target.files);
-            if (files.length === 0) return;
+        listContainer.appendChild(item)
+      })
+    }
 
-            for (const file of files) {
-                const fileURL = URL.createObjectURL(file);
-                const isAudio = file.type.startsWith('audio');
-                const { thumb, duration } = isAudio ? { thumb: '', duration: 'Audio' } : await extractVideoData(fileURL);
-
-                playlist.push({
-                    title: file.name.replace(/\.[^/.]+$/, ""),
-                    url: fileURL,
-                    thumb: thumb,
-                    duration: duration,
-                    type: isAudio ? 'mp3' : 'mp4'
-                });
-            }
-
-            renderPlaylist();
-            if (currentIndex === -1 && playlist.length > 0) {
-                loadTrack(0);
-            }
-        }
-
-        async function extractVideoData(videoUrl) {
-            return new Promise((resolve) => {
-                const tempVideo = document.createElement('video');
-                tempVideo.src = videoUrl;
-                tempVideo.currentTime = 1;
-                tempVideo.muted = true;
-
-                tempVideo.onloadeddata = () => {
-                    const durationFormatted = formatTime(tempVideo.duration);
-                    const canvas = document.createElement('canvas');
-                    canvas.width = 160;
-                    canvas.height = 90;
-                    const ctx = canvas.getContext('2d');
-                    ctx.drawImage(tempVideo, 0, 0, canvas.width, canvas.height);
-                    resolve({ thumb: canvas.toDataURL(), duration: durationFormatted });
-                };
-
-                tempVideo.onerror = () => resolve({ thumb: '', duration: '0:00' });
-            });
-        }
-
-        if (video) {
-            video.addEventListener('timeupdate', () => {
-                if (video.duration && !isNaN(video.duration)) {
-                    const progress = (video.currentTime / video.duration) * 100;
-                    if (progressbar) progressbar.value = progress;
-                    if (currenttime1) currenttime1.textContent = formatTime(video.currentTime);
-                    if (duration1) duration1.textContent = formatTime(video.duration);
-                }
-            });
-
-            video.addEventListener('ended', playNext);
-        }
-
-        if (progressbar) {
-            progressbar.addEventListener('input', () => {
-                if (video && video.duration && !isNaN(video.duration)) {
-                    if (progressbar.value > 99.5) {
-                        video.currentTime = video.duration - 0.1;
-                        video.pause();
-                        if (btnPlay) btnPlay.textContent = '▶';
-                    } else {
-                        video.currentTime = (progressbar.value / 100) * video.duration;
-                    }
-                }
-            });
-        }
-
-        function formatTime(seconds) {
-            if (isNaN(seconds)) return "0:00";
-            const mins = Math.floor(seconds / 60);
-            const secs = Math.floor(seconds % 60);
-            return `${mins}:${secs < 10 ? '0' : ''}${secs}`;
-        }
-
-        function renderPlaylist() {
-            const container = document.getElementById('playlistContainer');
-            if (!container) return;
-            container.innerHTML = '';
-
-            if (playlist.length === 0) {
-                container.innerHTML = '<div class="empty-msg">Žádné soubory v seznamu</div>';
-                return;
-            }
-
-            playlist.forEach((track, index) => {
-                const card = document.createElement('div');
-                card.className = `pl-card ${index === currentIndex ? 'active' : ''}`;
-                card.onclick = () => loadTrack(index);
-
-                card.innerHTML = `
-                    <div class="pl-thumb-wrapper">
-                        ${track.thumb ? `<img class="pl-thumb-img" src="${track.thumb}">` : '<span style="font-size:20px;">🎵</span>'}
-                    </div>
-                    <div class="pl-details">
-                        <div class="pl-title">${track.title}</div>
-                        <div class="pl-channel">${track.type.toUpperCase()}</div>
-                        <button class="btn-delete-item" onclick="deleteTrack(${index}, event)">Smazat ze seznamu</button>
-                    </div>
-                `;
-                container.appendChild(card);
-            });
-        }
-
-        function loadTrack(index) {
-            if (index < 0 || index >= playlist.length) return;
-
-            currentIndex = index;
-            const track = playlist[index];
-
-            if (video) video.src = track.url;
-            if (trackTitle) trackTitle.textContent = track.title;
-
-            renderPlaylist();
-        }
-
-        function playPause() {
-            if (!video.src) return;
-            if (video.paused) {
-                video.play();
-                if (btnPlay) btnPlay.textContent = '⏸';
-            } else {
-                video.pause();
-                if (btnPlay) btnPlay.textContent = '▶';
-            }
-        }
-
-        function playNext() {
-            if (playlist.length === 0) return;
-            loadTrack((currentIndex + 1) % playlist.length);
-            if (video) video.play();
-            if (btnPlay) btnPlay.textContent = '⏸';
-        }
-
-        function playPrev() {
-            if (playlist.length === 0) return;
-            loadTrack((currentIndex - 1 + playlist.length) % playlist.length);
-            if (video) video.play();
-            if (btnPlay) btnPlay.textContent = '⏸';
-        }
-
-        function deleteTrack(index, event) {
-            if (event) event.stopPropagation();
-            playlist.splice(index, 1);
-
-            if (playlist.length === 0) {
-                if (video) video.src = '';
-                if (trackTitle) trackTitle.textContent = 'Žádné soubory v seznamu';
-                currentIndex = -1;
-            } else if (index === currentIndex) {
-                currentIndex = currentIndex >= playlist.length ? 0 : currentIndex;
-                loadTrack(currentIndex);
-            } else if (index < currentIndex) {
-                currentIndex--;
-            }
-            renderPlaylist();
-        }
-    </script>
+    loadVideos()
+  </script>
 </body>
 </html>
