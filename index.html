@@ -250,10 +250,7 @@
             <span>▶</span> Můj Přehrávač
         </div>
         <div class="btn-container">
-            <!-- Tlačítko pro stažení ze Supabase -->
             <button class="btn-upload btn-supabase" onclick="loadPlaylistFromSupabase()">☁ Načíst ze Supabase</button>
-            
-            <!-- Tlačítko pro výběr z PC -->
             <label class="btn-upload">
                 + Nahrát soubory
                 <input type="file" id="fileInput" multiple accept="video/*,audio/*" style="display: none;" onchange="handleFileUpload(event)">
@@ -262,7 +259,6 @@
     </div>
 
     <div class="main-content">
-        <!-- Levá část: Přehrávač -->
         <div class="player-section">
             <div class="video-wrapper">
                 <video id="myVideo"></video>
@@ -282,7 +278,6 @@
             </div>
         </div>
 
-        <!-- Pravá část: Seznam skladeb -->
         <div class="playlist-section">
             <div class="playlist-title">Seznam skladeb / videí</div>
             <div class="playlist-items" id="playlistContainer">
@@ -292,6 +287,8 @@
     </div>
 
     <script>
+        // Kompletní Publishable key z tvého projektu
+        const SUPABASE_ANON_KEY = 'sb_publishable_ekDiPiW4YGpmP3tWDpSokg_UIzML'; 
         const SUPABASE_PROJECT_URL = 'https://uiwwvtruinrgdpvtiott.supabase.co';
 
         let playlist = [];
@@ -304,16 +301,23 @@
         const trackTitle = document.getElementById('trackTitle');
         const btnPlay = document.getElementById('btnPlay');
 
-        // Načtení seznamu ze Supabase po kliknutí na tlačítko
         async function loadPlaylistFromSupabase() {
             try {
                 if (trackTitle) trackTitle.textContent = "Načítám seznam ze Supabase...";
                 
                 const response = await fetch(`${SUPABASE_PROJECT_URL}/storage/v1/object/list/videa`, {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
+                    headers: { 
+                        'Content-Type': 'application/json',
+                        'apikey': SUPABASE_ANON_KEY,
+                        'Authorization': `Bearer ${SUPABASE_ANON_KEY}`
+                    },
                     body: JSON.stringify({ limit: 500, offset: 0, sortBy: { column: 'name', order: 'asc' } })
                 });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP chyba: ${response.status}`);
+                }
 
                 const files = await response.json();
 
@@ -345,7 +349,6 @@
             }
         }
 
-        // Ruční nahrání z PC
         async function handleFileUpload(event) {
             const files = Array.from(event.target.files);
             if (files.length === 0) return;
