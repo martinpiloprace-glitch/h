@@ -24,49 +24,50 @@
     <div id="videoList">Načítám...</div>
   </div>
 
-  <script type="module">
-    import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm'
+<script type="module">
+  import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm'
 
-    const SUPABASE_URL = 'https://uiwwtruinrgdpvtiott.supabase.co'
-    // Použij svůj klíč ze Supabase
-    const SUPABASE_KEY = 'sb_publishable_ekDiPiW4YGpmP3tWDpSokg_UIzML...' 
+  const SUPABASE_URL = 'https://uiwwtruinrgdpvtiott.supabase.co'
+  const SUPABASE_KEY = 'TVUJ_PUBLISHABLE_NEBO_ANON_KLIC' // Doplň svůj klíč
 
-    const supabase = createClient(SUPABASE_URL, SUPABASE_KEY)
+  const supabase = createClient(SUPABASE_URL, SUPABASE_KEY)
 
-    async function loadVideos() {
-      // Načtení seznamu souborů z bucketu 'videa'
-      const { data, error } = await supabase.storage.from('videa').list()
+  async function nactiAVytahniKlip() {
+    // 1. Získat seznam souborů z bucketu 'videa'
+    const { data: soubory, error } = await supabase
+      .storage
+      .from('videa')
+      .list()
 
-      if (error) {
-        console.error('Chyba načítání:', error)
-        document.getElementById('videoList').innerText = 'Chyba při načítání videí.'
-        return
-      }
-
-      const listContainer = document.getElementById('videoList')
-      listContainer.innerHTML = ''
-
-      data.forEach(file => {
-        // Ignorujeme složky nebo systémové soubory
-        if (file.name === '.emptyFolderPlaceholder') return
-
-        const item = document.createElement('div')
-        item.className = 'video-item'
-        item.innerText = file.name
-
-        item.onclick = () => {
-          // Získání veřejné URL adresy konkrétního videa
-          const { data: urlData } = supabase.storage.from('videa').getPublicUrl(file.name)
-          const player = document.getElementById('mainPlayer')
-          player.src = urlData.publicUrl
-          document.getElementById('videoTitle').innerText = file.name
-        }
-
-        listContainer.appendChild(item)
-      })
+    if (error) {
+      console.error('Chyba při načítání ze Supabase:', error)
+      return
     }
 
-    loadVideos()
-  </script>
+    // 2. Vyfiltrujeme případné systémové složky
+    const videa = soubory.filter(file => file.name !== '.emptyFolderPlaceholder')
+
+    if (videa.length > 0) {
+      // Vezmeme první dostupné video (v tvém případě "1p (1).mp4")
+      const prvniVideo = videa[0].name
+
+      // 3. Vygenerujeme přímou veřejnou URL adresu pro video
+      const { data: urlData } = supabase
+        .storage
+        .from('videa')
+        .getPublicUrl(prvniVideo)
+
+      // 4. Vložíme URL přímo do <video> přehrávače na stránce
+      const prehravac = document.getElementById('mainPlayer') // podle ID tvého <video> tagu
+      if (prehravac) {
+        prehravac.src = urlData.publicUrl
+        console.log('Klip úspěšně načten:', urlData.publicUrl)
+      }
+    }
+  }
+
+  // Spustit automaticky po načtení stránky
+  nactiAVytahniKlip()
+</script>
 </body>
 </html>
