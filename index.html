@@ -153,227 +153,221 @@
     </div>
   </div>
 
-  <script>
-    let playlist = [];
-    let currentIndex = -1;
+<script>
+        // Konfigurace Supabase
+        const SUPABASE_PROJECT_URL = 'https://uiwwvtruinrgdpvtiott.supabase.co';
 
-    const video = document.getElementById('myVideo');
-    const progressBar = document.getElementById('progressBar');
-    const currentTimeEl = document.getElementById('currentTime');
-    const durationEl = document.getElementById('duration');
-    const btnPlay = document.getElementById('btnPlay');
-    const audioDisc = document.getElementById('audioDisc');
+        // Globální proměnné
+        let playlist = [];
+        let currentIndex = -1;
 
-    video.addEventListener('timeupdate', () => {
-      if (!isNaN(video.duration) && video.duration > 0) {
-        const progress = (video.currentTime / video.duration) * 100;
-        progressBar.value = progress;
-        currentTimeEl.textContent = formatTime(video.currentTime);
-        durationEl.textContent = formatTime(video.duration);
-      }
-    });
+        // 1. Funkce pro načtení videí ze Supabase
+        async function loadPlaylistFromSupabase() {
+            try {
+                const response = await fetch(`${SUPABASE_PROJECT_URL}/storage/v1/object/list/videa`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ limit: 500, offset: 0, sortBy: { column: 'name', order: 'asc' } })
+                });
 
-    progressBar.addEventListener('input', () => {
-      if (!isNaN(video.duration) && video.duration > 0) {
-        if (progressBar.value >= 99.5) {
-          video.currentTime = video.duration - 0.1;
-          video.pause();
-          btnPlay.textContent = '▶';
-          audioDisc.style.animationPlayState = 'paused';
-        } else {
-          video.currentTime = (progressBar.value / 100) * video.duration;
+                const files = await response.json();
+
+                if (Array.isArray(files)) {
+                    playlist = files
+                        .filter(file => file.name !== '.emptyFolderPlaceholder')
+                        .map(file => {
+                            const publicUrl = `${SUPABASE_PROJECT_URL}/storage/v1/object/public/videa/${encodeURIComponent(file.name)}`;
+                            const cleanTitle = file.name.replace(/\.[^/.]+$/, "").replace(/[-_]/g, " ");
+
+                            return {
+                                title: cleanTitle,
+                                url: publicUrl,
+                                thumb: '',
+                                duration: '0:00',
+                                type: 'mp4'
+                            };
+                        });
+
+                    renderPlaylist();
+
+                    if (playlist.length > 0) {
+                        loadTrack(0);
+                    }
+                }
+            } catch (error) {
+                console.error('Chyba při načítání playlistu ze Supabase:', error);
+            }
         }
-      }
-    });
 
-    video.addEventListener('ended', playNext);
+        // Spustí načítání ze Supabase při otevření stránky
+        window.addEventListener('DOMContentLoaded', loadPlaylistFromSupabase);
 
-    async function handleFilesUpload(event) {
-      const files = Array.from(event.target.files);
-      if (files.length === 0) return;
+        // --- ZDE POKRAČUJÍ TVOJE STÁVAJÍCÍ FUNKCE ---
 
-      for (const file of files) {
-        const fileURL = URL.createObjectURL(file);
-        const isAudio = file.type.startsWith('audio');
-        const { thumb, duration } = isAudio ? { thumb: '', duration: 'Audio' } : await extractVideoData(fileURL);
-        
-        playlist.push({
-          title: file.name.replace(/\.[^/.]+$/, ""),
-          url: fileURL,
-          thumb: thumb,
-          duration: duration,
-          type: isAudio ? 'mp3' : 'mp4'
+        const video = document.getElementById('myVideo');
+        const progressbar = document.getElementById('progressbar');
+        const currenttime1 = document.getElementById('currenttime');
+        const duration1 = document.getElementById('duration');
+        const trackTitle = document.getElementById('trackTitle');
+        const audioDiv = document.getElementById('audioDiv');
+
+        video.addEventListener('timeupdate', () => {
+            if (video.duration && !isNaN(video.duration)) {
+                const progress = (video.currentTime / video.duration) * 100;
+                progressbar.value = progress;
+                currenttime1.textContent = formatTime(video.currentTime);
+                duration1.textContent = formatTime(video.duration);
+            }
         });
-      }
 
-      renderPlaylist();
-      if (currentIndex === -1 && playlist.length > 0) {
-        loadTrack(0);
-      }
-    }
+        progressbar.addEventListener('input', () => {
+            if (video.duration && !isNaN(video.duration)) {
+                if (progressbar.value > 99.5) {
+                    video.currentTime = video.duration - 0.1;
+                    video.pause();
+                    btnPlay.textContent = '▶';
+                    audioDiv.style.animationPlayState = 'paused';
+                } else {
+                    video.currentTime = (progressbar.value / 100) * video.duration;
+                }
+            }
+        });
 
-    function extractVideoData(videoUrl) {
-      return new Promise((resolve) => {
-        const tempVideo = document.createElement('video');
-        tempVideo.src = videoUrl;
-        tempVideo.currentTime = 1;
-        tempVideo.muted = true;
-        
-        tempVideo.onloadedmetadata = () => {
-          const durationFormatted = formatTime(tempVideo.duration);
-          tempVideo.onseeked = () => {
-            const canvas = document.createElement('canvas');
-            canvas.width = 160;
-            canvas.height = 90;
-            const ctx = canvas.getContext('2d');
-            ctx.drawImage(tempVideo, 0, 0, canvas.width, canvas.height);
-            resolve({ thumb: canvas.toDataURL(), duration: durationFormatted });
-          };
-        };
-        tempVideo.onerror = () => resolve({ thumb: '', duration: '0:00' });
-      });
-    }
+        video.addEventListener('ended', playNext);
 
-    function formatTime(seconds) {
-      if (isNaN(seconds)) return "0:00";
-      const mins = Math.floor(seconds / 60);
-      const secs = Math.floor(seconds % 60);
-      return `${mins}:${secs < 10 ? '0' : ''}${secs}`;
-    }
+        // Funkce pro ruční nahrání souborů z PC (ponechána)
+        async function handleFileUpload(event) {
+            const files = Array.from(event.target.files);
+            if (files.length === 0) return;
 
-    function renderPlaylist() {
-      const container = document.getElementById('playlistContainer');
-      container.innerHTML = '';
+            for (const file of files) {
+                const fileURL = URL.createObjectURL(file);
+                const isAudio = file.type.startsWith('audio');
+                const { thumb, duration } = isAudio ? { thumb: '', duration: 'Audio' } : await extractVideoData(fileURL);
 
-      if (playlist.length === 0) {
-        container.innerHTML = '<div style="color: #aaa; font-size: 12px; text-align: center; margin-top: 20px;">Žádné soubory v seznamu</div>';
-        return;
-      }
+                playlist.push({
+                    title: file.name.replace(/\.[^/.]+$/, ""),
+                    url: fileURL,
+                    thumb: thumb,
+                    duration: duration,
+                    type: isAudio ? 'mp3' : 'mp4'
+                });
+            }
 
-      playlist.forEach((track, index) => {
-        const card = document.createElement('div');
-        card.className = `yt-card ${index === currentIndex ? 'active' : ''}`;
-        card.onclick = () => loadTrack(index);
-
-        const thumbHtml = track.thumb 
-          ? `<img class="yt-thumb-img" src="${track.thumb}">`
-          : `<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:#272727;font-size:24px;">🎵</div>`;
-
-        card.innerHTML = `
-          <div class="yt-thumb-wrapper">
-            ${thumbHtml}
-            <span class="yt-duration">${track.duration}</span>
-          </div>
-          <div class="yt-details">
-            <div class="yt-title">${track.title}</div>
-            <div class="yt-channel">${track.type.toUpperCase()} Soubor</div>
-          </div>
-          <button class="btn-delete-item" onclick="deleteTrack(${index}, event)" title="Smazat ze seznamu">✕</button>
-        `;
-        container.appendChild(card);
-      });
-    }
-
-    function loadTrack(index) {
-      if (index < 0 || index >= playlist.length) return;
-      
-      currentIndex = index;
-      const track = playlist[currentIndex];
-      
-      video.src = track.url;
-      document.getElementById('trackTitle').textContent = track.title;
-      document.getElementById('audioTrackTitle').textContent = track.title;
-      
-      setMode(track.type);
-      video.play();
-      btnPlay.textContent = '⏸';
-      audioDisc.style.animationPlayState = 'running';
-      
-      renderPlaylist();
-    }
-
-    function playPause() {
-      if (!video.src) return;
-
-      if (video.paused) {
-        video.play();
-        btnPlay.textContent = '⏸';
-        audioDisc.style.animationPlayState = 'running';
-      } else {
-        video.pause();
-        btnPlay.textContent = '▶';
-        audioDisc.style.animationPlayState = 'paused';
-      }
-    }
-
-    function playNext() {
-      if (playlist.length === 0) return;
-      loadTrack((currentIndex + 1) % playlist.length);
-    }
-
-    function playPrev() {
-      if (playlist.length === 0) return;
-      loadTrack((currentIndex - 1 + playlist.length) % playlist.length);
-    }
-
-    function setVolume(val) {
-      video.volume = val;
-    }
-
-    function toggleMute() {
-      video.muted = !video.muted;
-    }
-
-    function toggleFullscreen() {
-      if (video.requestFullscreen) video.requestFullscreen();
-    }
-
-    function setMode(mode) {
-      const card = document.getElementById('playerCard');
-      const btnMp4 = document.getElementById('btnMp4');
-      const btnMp3 = document.getElementById('btnMp3');
-
-      if (mode === 'mp3') {
-        card.classList.add('audio-only');
-        btnMp3.classList.add('active');
-        btnMp4.classList.remove('active');
-      } else {
-        card.classList.remove('audio-only');
-        btnMp4.classList.add('active');
-        btnMp3.classList.remove('active');
-      }
-    }
-
-    function deleteTrack(index, event) {
-      if (event) event.stopPropagation();
-
-      playlist.splice(index, 1);
-
-      if (playlist.length === 0) {
-        currentIndex = -1;
-        video.src = '';
-        document.getElementById('trackTitle').textContent = 'Vyberte soubory tlačítkem "+ Nahrát soubory"';
-        document.getElementById('audioTrackTitle').textContent = 'Audio Režim';
-        btnPlay.textContent = '▶';
-        audioDisc.style.animationPlayState = 'paused';
-      } else if (index === currentIndex) {
-        if (currentIndex >= playlist.length) {
-          currentIndex = 0;
+            renderPlaylist();
+            if (currentIndex === -1 && playlist.length > 0) {
+                loadTrack(0);
+            }
         }
-        loadTrack(currentIndex);
-      } else if (index < currentIndex) {
-        currentIndex--;
-      }
 
-      renderPlaylist();
-    }
+        async function extractVideoData(videoUrl) {
+            return new Promise((resolve) => {
+                const tempVideo = document.createElement('video');
+                tempVideo.src = videoUrl;
+                tempVideo.currentTime = 1;
+                tempVideo.muted = true;
 
-    function deleteCurrentTrack() {
-      if (currentIndex !== -1 && playlist.length > 0) {
-        deleteTrack(currentIndex);
-      }
-    }
-  </script>
+                tempVideo.onloadeddata = () => {
+                    const durationFormatted = formatTime(tempVideo.duration);
+                    const canvas = document.createElement('canvas');
+                    canvas.width = 160;
+                    canvas.height = 90;
+                    const ctx = canvas.getContext('2d');
+                    ctx.drawImage(tempVideo, 0, 0, canvas.width, canvas.height);
+                    resolve({ thumb: canvas.toDataURL(), duration: durationFormatted });
+                };
 
+                tempVideo.onerror = () => resolve({ thumb: '', duration: '0:00' });
+            });
+        }
+
+        function formatTime(seconds) {
+            if (isNaN(seconds)) return "0:00";
+            const mins = Math.floor(seconds / 60);
+            const secs = Math.floor(seconds % 60);
+            return `${mins}:${secs < 10 ? '0' : ''}${secs}`;
+        }
+
+        function renderPlaylist() {
+            const container = document.getElementById('playlistContainer');
+            if (!container) return;
+            container.innerHTML = '';
+
+            playlist.forEach((track, index) => {
+                const card = document.createElement('div');
+                card.className = `pl-card ${index === currentIndex ? 'active' : ''}`;
+                card.onclick = () => loadTrack(index);
+
+                card.innerHTML = `
+                    <div class="pl-thumb-wrapper">
+                        ${track.thumb ? `<img class="pl-thumb-img" src="${track.thumb}">` : '<div style="width:160px;height:100px;display:flex;align-items:center;justify-content:center;background:#272727;font-size:24px;">🎵</div>'}
+                        <span class="pl-duration">${track.duration}</span>
+                    </div>
+                    <div class="pl-details">
+                        <div class="pl-title">${track.title}</div>
+                        <div class="pl-channel">${track.type.toUpperCase()}</div>
+                        <button class="btn-delete-item" onclick="deleteTrack(${index}, event)">Smazat ze seznamu</button>
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        function loadTrack(index) {
+            if (index < 0 || index >= playlist.length) return;
+
+            currentIndex = index;
+            const track = playlist[index];
+
+            video.src = track.url;
+            if (trackTitle) trackTitle.textContent = track.title;
+            const mediaTrackTitle = document.getElementById('mediaTrackTitle');
+            if (mediaTrackTitle) mediaTrackTitle.textContent = track.title;
+
+            if (audioDiv) audioDiv.style.animationPlayState = 'running';
+
+            renderPlaylist();
+        }
+
+        function playPause() {
+            if (!video.src) return;
+            if (video.paused) {
+                video.play();
+                if (btnPlay) btnPlay.textContent = '⏸';
+                if (audioDiv) audioDiv.style.animationPlayState = 'running';
+            } else {
+                video.pause();
+                if (btnPlay) btnPlay.textContent = '▶';
+                if (audioDiv) audioDiv.style.animationPlayState = 'paused';
+            }
+        }
+
+        function playNext() {
+            if (playlist.length === 0) return;
+            loadTrack((currentIndex + 1) % playlist.length);
+        }
+
+        function playPrev() {
+            if (playlist.length === 0) return;
+            loadTrack((currentIndex - 1 + playlist.length) % playlist.length);
+        }
+
+        function deleteTrack(index, event) {
+            if (event) event.stopPropagation();
+            playlist.splice(index, 1);
+
+            if (playlist.length === 0) {
+                video.src = '';
+                if (trackTitle) trackTitle.textContent = 'Vyberte soubory tlačítkem "Nahrát soubory"';
+                currentIndex = -1;
+            } else if (index === currentIndex) {
+                currentIndex = currentIndex >= playlist.length ? 0 : currentIndex;
+                loadTrack(currentIndex);
+            } else if (index < currentIndex) {
+                currentIndex--;
+            }
+            renderPlaylist();
+        }
+    </script>
 </body>
 </html>
